@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ตรวจนับ PL">
+<meta name="theme-color" content="#1e3a8a">
+<title>ตรวจนับ PL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  // ============================================================
+  //  ใส่ URL ของ Apps Script Web App ที่ได้จากขั้นตอน Deploy ตรงนี้
+  // ============================================================
+  var API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQwDNRr2CHm4wlbfMIpRRa4s6vfGRhaJDpTYUmMxxYR8hH6nDqSfeJgO5lE0V__6YmAorEe0k3AJAoD9FfyP5M3_JgnFE_425Z8H6zX3Gf3A1lxCX_x0r6SymRkbLl6gQtYO-795izHSC0iLgf7yA_W_Za28ZCSsaYsO42FR0HL9iJ1mKZJhUYUbScoDZpNYfqrPBn1jGHhsoXlOlY3por8v7pvOJOff_dtprDU9UIPAyvU7RNyibgQlbRWXNq3b510IFqhhBkx8SrgCjw&lib=M6h7J4C9OUxeLXSxQ9IJUgzOPAVEU_z_Y';
+</script>
+<style>
+  :root{
+    --blue:#1e3a8a; --blue2:#2563eb; --green:#16a34a; --green-bg:#dcfce7;
+    --red:#dc2626; --red-bg:#fee2e2; --orange:#ea580c; --orange-bg:#ffedd5;
+    --yellow:#facc15; --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --bg:#eef2f7; --card:#fff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',system-ui,sans-serif;font-size:18px}
+  button,input{font-family:inherit}
+  .hidden{display:none!important}
+  .screen{min-height:100vh;display:flex;flex-direction:column}
+  .top{background:var(--blue);color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));position:sticky;top:0;z-index:20}
+  .top h1{margin:0;font-size:24px;font-weight:800}
+  .top .sub{font-size:16px;opacity:.9;margin-top:2px}
+  .top .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .wrap{padding:16px;flex:1;width:100%;max-width:640px;margin:0 auto}
+  .card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(15,23,42,.08);margin-bottom:14px}
+  label.lb{display:block;font-weight:800;font-size:20px;margin:6px 0 8px}
+  .inp{width:100%;font-size:24px;padding:14px 16px;border:3px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+  .inp:focus{border-color:var(--blue2)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:14px;padding:16px;font-size:22px;font-weight:800;cursor:pointer;min-height:62px}
+  .btn:active{transform:scale(.98)}
+  .btn-main{background:var(--blue2);color:#fff}
+  .btn-go{background:var(--green);color:#fff}
+  .btn-ghost{background:#fff;color:var(--blue);border:3px solid var(--blue)}
+  .btn-warn{background:var(--yellow);color:var(--ink)}
+  .btn-sm{min-height:44px;padding:8px 14px;font-size:17px;width:auto;border-radius:10px}
+  .btn[disabled]{opacity:.45}
+  .gap{height:12px}
+  .muted{color:var(--muted);font-size:16px}
+  .datebox{font-size:30px;font-weight:800;color:var(--blue);background:#e0e7ff;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+  .datebox small{font-size:15px;color:var(--muted);font-weight:600}
+  .plinput{display:flex;align-items:stretch}
+  .plinput span{background:var(--blue);color:#fff;font-size:26px;font-weight:800;padding:0 16px;display:flex;align-items:center;border-radius:12px 0 0 12px}
+  .plinput .inp{border-radius:0 12px 12px 0;font-size:32px;letter-spacing:2px;font-weight:800}
+  .err{background:var(--red-bg);color:var(--red);border-radius:12px;padding:12px 14px;font-weight:600;margin-top:12px}
+  .choice{display:block;width:100%;text-align:left;background:#fff;border:3px solid var(--line);border-radius:12px;padding:14px;font-size:22px;font-weight:800;margin-top:10px}
+  /* count screen */
+  .searchbar{display:flex;gap:8px;margin-top:10px}
+  .searchbar .box{position:relative;flex:1}
+  .searchbar .inp{font-size:21px;padding:12px 44px 12px 14px;border-color:#fff}
+  .clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:#e2e8f0;border-radius:50%;width:34px;height:34px;font-size:18px;font-weight:800;color:var(--muted)}
+  .scan{background:var(--yellow);color:var(--ink);border:0;border-radius:12px;font-size:20px;font-weight:800;padding:0 16px;min-width:96px}
+  .stat{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 10px;font-weight:700;color:var(--muted)}
+  .stat b{color:var(--ink)}
+  .item{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:12px;border:3px solid transparent;box-shadow:0 2px 6px rgba(15,23,42,.07)}
+  .item.done{border-color:var(--green);background:#f7fef9}
+  .item.flash{animation:flash 1.2s ease}
+  @keyframes flash{0%,60%{border-color:var(--yellow);box-shadow:0 0 0 6px rgba(250,204,21,.5)}}
+  .item .name{font-size:21px;font-weight:800;line-height:1.3}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+  .tag{font-size:15px;font-weight:700;border-radius:8px;padding:2px 8px;background:#e2e8f0;color:#334155}
+  .tag.size{background:#dbeafe;color:var(--blue);font-size:17px}
+  .tag.out{background:var(--orange-bg);color:var(--orange)}
+  .tag.ok{background:var(--green-bg);color:var(--green)}
+  .qty{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .qbox .ql{font-size:16px;font-weight:800;color:var(--muted);text-align:center;margin-bottom:4px}
+  .step{display:flex;align-items:stretch;height:58px}
+  .step button{width:48px;border:0;background:#e2e8f0;font-size:28px;font-weight:800;color:var(--ink)}
+  .step button:first-child{border-radius:12px 0 0 12px}
+  .step button:last-child{border-radius:0 12px 12px 0}
+  .step input{width:100%;min-width:0;border:3px solid #e2e8f0;border-left:0;border-right:0;text-align:center;font-size:28px;font-weight:800;outline:none;color:var(--ink)}
+  .step input:focus{border-color:var(--blue2);background:#eff6ff}
+  .step input.hl{background:#fef9c3}
+  .pager{display:flex;align-items:center;gap:8px;margin:6px 0 4px}
+  .pager .btn{flex:1;min-height:54px;font-size:19px}
+  .pager .pg{font-weight:800;font-size:19px;white-space:nowrap;padding:0 4px}
+  .empty{text-align:center;padding:30px 10px;color:var(--muted);font-size:19px}
+  .bottom{position:sticky;bottom:0;background:#fff;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(15,23,42,.1);display:flex;gap:10px;z-index:15}
+  .bottom .btn{min-height:58px;font-size:20px}
+  .bottom .btn.back{flex:0 0 34%}
+  /* review */
+  .rv{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #e2e8f0;font-size:18px}
+  .rv:last-child{border-bottom:0}
+  .rv .n{font-weight:700}
+  .rv .q{white-space:nowrap;font-weight:800;text-align:right}
+  .sec{font-weight:800;font-size:19px;margin:4px 0 6px}
+  .sec.red{color:var(--red)} .sec.green{color:var(--green)} .sec.orange{color:var(--orange)}
+  .big-ok{font-size:84px;text-align:center;line-height:1}
+  /* overlays */
+  #loading{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:90;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:22px;font-weight:800;gap:14px}
+  .spin{width:56px;height:56px;border:6px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #toast{position:fixed;left:16px;right:16px;bottom:96px;z-index:95;padding:16px;border-radius:14px;font-size:20px;font-weight:800;text-align:center;color:#fff;background:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  #toast.ok{background:var(--green)} #toast.bad{background:var(--red)}
+  #scanner{position:fixed;inset:0;background:#000;z-index:80;display:flex;flex-direction:column}
+  #scanner .head{color:#fff;font-size:22px;font-weight:800;text-align:center;padding:16px;padding-top:max(16px,env(safe-area-inset-top))}
+  #reader{flex:1;width:100%;overflow:hidden}
+  #reader video{object-fit:cover}
+  #scanner .foot{padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+</style>
+</head>
+<body>
+
+<!-- ============ 1. LOGIN ============ -->
+<section id="s-login" class="screen">
+  <div class="top"><h1>📦 ตรวจนับสินค้า PL</h1><div class="sub">เข้าสู่ระบบผู้ตรวจ (Checker)</div></div>
+  <div class="wrap">
+    <div class="card">
+      <label class="lb" for="email">อีเมล</label>
+      <input id="email" class="inp" type="email" autocomplete="username" autocapitalize="off" placeholder="name@gmail.com">
+      <div class="gap"></div>
+      <label class="lb" for="pin">PIN 4 หลัก</label>
+      <input id="pin" class="inp" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="••••" style="letter-spacing:10px;font-size:30px">
+      <div id="login-err" class="err hidden"></div>
+      <div class="gap"></div>
+      <button id="btn-login" class="btn btn-main">เข้าสู่ระบบ ➜</button>
+    </div>
+    <div class="card">
+      <button id="btn-refresh" class="btn btn-warn">🔄 Refresh ข้อมูลสินค้า</button>
+      <p id="prod-status" class="muted" style="text-align:center;margin:10px 0 0">กำลังโหลด...</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. เลือก PL ============ -->
+<section id="s-pl" class="screen hidden">
+  <div class="top">
+    <div class="row"><h1>เลือกใบเบิก</h1><button id="btn-logout" class="btn btn-ghost btn-sm" style="border-color:#fff;color:#fff;background:transparent">ออกจากระบบ</button></div>
+    <div class="sub">👤 <span class="u-name"></span></div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <label class="lb">วันที่ตรวจ</label>
+      <div class="datebox"><span class="today"></span><small>🔒 วันนี้</small></div>
+      <div class="gap"></div>
+      <label class="lb" for="plq">เลขที่เอกสาร PL (อย่างน้อย 5 หลัก)</label>
+      <div class="plinput"><span>PL</span><input id="plq" class="inp" type="text" inputmode="numeric" autocomplete="off" placeholder="90483"></div>
+      <div id="pl-err" class="err hidden"></div>
+      <div class="gap"></div>
+      <button id="btn-findpl" class="btn btn-main">ถัดไป ➜</button>
+      <div id="pl-multi"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. ตรวจนับ ============ -->
+<section id="s-count" class="screen hidden">
+  <div class="top">
+    <div class="row"><h1 class="pl-no"></h1><div class="sub" style="text-align:right"><span class="today-short"></span><br>👤 <span class="u-name"></span></div></div>
+    <div class="searchbar">
+      <div class="box">
+        <input id="q" class="inp" type="search" autocomplete="off" placeholder="🔍 ค้นหา เช่น 345">
+        <button id="q-clear" class="clear hidden" aria-label="ล้าง">✕</button>
+      </div>
+      <button id="btn-scan" class="scan">📷 สแกน</button>
+    </div>
+  </div>
+  <div class="wrap" style="padding-bottom:8px">
+    <div class="stat"><span id="stat-left"></span><span id="stat-right"></span></div>
+    <div id="list"></div>
+    <div class="pager" id="pager">
+      <button id="pg-prev" class="btn btn-ghost">◀ ก่อนหน้า</button>
+      <span class="pg" id="pg-info"></span>
+      <button id="pg-next" class="btn btn-ghost">ถัดไป ▶</button>
+    </div>
+  </div>
+  <div class="bottom">
+    <button id="btn-changepl" class="btn btn-ghost back">◀ เปลี่ยน PL</button>
+    <button id="btn-review" class="btn btn-go">ตรวจสอบ &amp; ส่ง ➜</button>
+  </div>
+</section>
+
+<!-- ============ 4. ตรวจสอบก่อนส่ง ============ -->
+<section id="s-review" class="screen hidden">
+  <div class="top"><h1>ตรวจสอบก่อนส่ง</h1><div class="sub"><span class="pl-no"></span> • <span class="today-short"></span></div></div>
+  <div class="wrap" id="review-body"></div>
+  <div class="bottom">
+    <button id="btn-back-edit" class="btn btn-ghost back">◀ แก้ไข</button>
+    <button id="btn-submit" class="btn btn-go">✅ ส่งข้อมูล</button>
+  </div>
+</section>
+
+<!-- ============ 5. ส่งสำเร็จ ============ -->
+<section id="s-done" class="screen hidden">
+  <div class="top"><h1>บันทึกเรียบร้อย</h1><div class="sub">👤 <span class="u-name"></span></div></div>
+  <div class="wrap">
+    <div class="card" style="text-align:center">
+      <div class="big-ok">✅</div>
+      <h2 style="font-size:28px;margin:10px 0 4px" class="pl-no"></h2>
+      <p id="done-msg" style="font-size:19px;margin:0"></p>
+    </div>
+    <button id="btn-edit-again" class="btn btn-ghost">✏️ ย้อนกลับไปแก้ไข PL นี้</button>
+    <div class="gap"></div>
+    <button id="btn-new-pl" class="btn btn-main">📋 ตรวจ PL ใบใหม่</button>
+  </div>
+</section>
+
+<!-- ============ Overlays ============ -->
+<div id="scanner" class="hidden">
+  <div class="head">เล็งกล้องไปที่บาร์โค้ด</div>
+  <div id="reader"></div>
+  <div class="foot"><button id="btn-scan-close" class="btn btn-warn">✕ ปิดกล้อง</button></div>
+</div>
+<div id="loading" class="hidden"><div class="spin"></div><div id="loading-text">กำลังโหลด...</div></div>
+<div id="toast" class="hidden"></div>
+
+<script>
+(function () {
+  'use strict';
+  var PAGE_SIZE = 6;
+  var S = {
+    user: null,          // {email, pin, name}
+    products: [], byCode: {}, byBarcode: {},
+    pl: null,            // {pl, items:[{code,name}], inPL:{code:true}}
+    counts: {},          // {code: {pack:'', unit:''}}
+    extra: [],           // รหัสสินค้านอก PL ที่นับ
+    page: 0, q: '', focusCode: null, focusField: null
+  };
+
+  // ---------- helpers ----------
+  function $(id) { return document.getElementById(id); }
+  function all(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  function show(id) { all('.screen').forEach(function (s) { s.classList.add('hidden'); }); $(id).classList.remove('hidden'); window.scrollTo(0, 0); updateDates(); }
+  function setText(cls, t) { all('.' + cls).forEach(function (el) { el.textContent = t; }); }
+  function loading(on, text) { $('loading-text').textContent = text || 'กำลังโหลด...'; $('loading').classList.toggle('hidden', !on); }
+  var toastT;
+  function toast(msg, type) { var t = $('toast'); t.textContent = msg; t.className = type || ''; clearTimeout(toastT); toastT = setTimeout(function () { t.className = 'hidden'; }, 2600); }
+  function errBox(id, msg) { var e = $(id); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
+  function digits(s) { return String(s || '').replace(/\D/g, ''); }
+
+  var DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function updateDates() {
+    var d = new Date();
+    var s = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+    setText('today', DAYS[d.getDay()] + ' ' + s);
+    setText('today-short', '📅 ' + s);
+  }
+
+  function api(action, payload) {
+    var body = Object.assign({ action: action }, payload || {});
+    if (S.user && action !== 'login' && action !== 'products') { body.email = S.user.email; body.pin = S.user.pin; }
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด'); return j; })
+      .catch(function (e) {
+        if (e instanceof TypeError) throw new Error('เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ต');
+        throw e;
+      });
+  }
+
+  // ---------- products ----------
+  function setProducts(list, updated) {
+    S.products = list; S.byCode = {}; S.byBarcode = {};
+    list.forEach(function (p) {
+      p._hay = norm([p.n, p.b, p.s].join(' '));
+      p._code = String(p.c);
+      p._size = digits(p.s);
+      S.byCode[p.c] = p;
+      String(p.bp || '').split(',').filter(String).forEach(function (b) { S.byBarcode[b] = { code: p.c, field: 'pack' }; });
+      String(p.bu || '').split(',').filter(String).forEach(function (b) { S.byBarcode[b] = { code: p.c, field: 'unit' }; });
+    });
+    $('prod-status').textContent = 'สินค้า ' + list.length + ' รายการ • อัพเดท ' + (updated || '-');
+  }
+  function refreshProducts(silent) {
+    if (!silent) loading(true, 'กำลังดึงข้อมูลสินค้า...');
+    return api('products').then(function (j) {
+      setProducts(j.products, j.updated);
+      store('products', { list: j.products, updated: j.updated });
+      if (!silent) toast('อัพเดทข้อมูลสินค้าแล้ว ✓', 'ok');
+    }).catch(function (e) {
+      if (!silent) toast(e.message, 'bad');
+      else if (!S.products.length) $('prod-status').textContent = '⚠️ ' + e.message;
+    }).finally(function () { loading(false); });
+  }
+
+  // ---------- fuzzy search ----------
+  function norm(s) {
+    return String(s || '').toLowerCase()
+      .replace(/[็-๎]/g, '')          // ตัดวรรณยุกต์/การันต์
+      .replace(/มล\.?/g, 'ml').replace(/ลิตร/g, 'l')
+      .replace(/[\s.\-_()\/\\*]+/g, '');
+  }
+  // ระยะห่างแบบยอมให้พิมพ์ผิด (หา token ในข้อความ ยอมผิดได้ k ตัว)
+  function fuzzyHas(text, pat, k) {
+    var m = pat.length, prev = new Array(m + 1), cur = new Array(m + 1), i, j;
+    for (j = 0; j <= m; j++) prev[j] = j;
+    if (prev[m] <= k) return true;
+    for (i = 1; i <= text.length; i++) {
+      cur[0] = 0;
+      for (j = 1; j <= m; j++) {
+        var cost = text.charAt(i - 1) === pat.charAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(prev[j - 1] + cost, prev[j] + 1, cur[j - 1] + 1);
+      }
+      if (cur[m] <= k) return true;
+      var t = prev; prev = cur; cur = t;
+    }
+    return false;
+  }
+  function scoreProduct(p, tokens) {
+    var score = 0;
+    for (var i = 0; i < tokens.length; i++) {
+      var t = tokens[i];
+      if (/^\d+$/.test(t)) {
+        if (t === p._size) score += 10;
+        else if (t.length >= 5 && p._code.indexOf(t) >= 0) score += 8;
+        else if (p._hay.indexOf(t) >= 0) score += 4;
+        else return 0;
+      } else {
+        if (p._hay.indexOf(t) >= 0 || p._code === t) score += 6;
+        else if (t.length >= 3 && fuzzyHas(p._hay, t, t.length >= 7 ? 2 : 1)) score += 2;
+        else return 0;
+      }
+    }
+    return score;
+  }
+  function currentList() {
+    var inPL = S.pl ? S.pl.inPL : {};
+    if (S.focusCode) return [S.byCode[S.focusCode] || { c: S.focusCode, n: S.focusCode }];
+    var q = S.q.trim();
+    if (!q) {
+      var base = S.pl.items.map(function (it) { return S.byCode[it.code] || { c: it.code, n: it.name, s: '', p: 0 }; });
+      S.extra.forEach(function (c) { if (!inPL[c] && S.byCode[c]) base.push(S.byCode[c]); });
+      return base;
+    }
+    var tokens = q.split(/\s+/).map(norm).filter(String);
+    var pool = S.products.slice();
+    S.pl.items.forEach(function (it) { if (!S.byCode[it.code]) pool.push({ c: it.code, n: it.name, s: '', p: 0, _hay: norm(it.name), _code: it.code, _size: '' }); });
+    var res = [];
+    pool.forEach(function (p) {
+      var sc = scoreProduct(p, tokens);
+      if (sc > 0) res.push({ p: p, sc: sc + (inPL[p.c] ? 100 : 0) });
+    });
+    res.sort(function (a, b) { return b.sc - a.sc || String(a.p.n).localeCompare(String(b.p.n), 'th'); });
+    return res.map(function (r) { return r.p; });
+  }
+
+  // ---------- count screen ----------
+  function isCounted(code) { var c = S.counts[code]; return !!(c && (c.pack !== '' || c.unit !== '')); }
+  function saveDraft() { if (S.pl) store('draft_' + S.pl.pl, { counts: S.counts, extra: S.extra }); }
+
+  function renderList() {
+    var list = currentList();
+    var pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    if (S.page >= pages) S.page = pages - 1;
+    if (S.page < 0) S.page = 0;
+    var slice = list.slice(S.page * PAGE_SIZE, (S.page + 1) * PAGE_SIZE);
+    var inPL = S.pl.inPL;
+    var html = slice.map(function (p) {
+      var c = S.counts[p.c] || { pack: '', unit: '' };
+      var tags = '';
+      if (p.s) tags += '<span class="tag size">' + esc(p.s) + '</span>';
+      if (p.p) tags += '<span class="tag">' + esc(p.p) + ' ชิ้น/แพค</span>';
+      tags += '<span class="tag">' + esc(p.c) + '</span>';
+      if (!inPL[p.c]) tags += '<span class="tag out">⚠ นอก PL</span>';
+      return '<div class="item' + (isCounted(p.c) ? ' done' : '') + '" data-code="' + esc(p.c) + '">' +
+        '<div class="name">' + esc(p.n) + '</div><div class="tags">' + tags + '</div>' +
+        '<div class="qty">' + stepper(p.c, 'pack', 'แพค', c.pack) + stepper(p.c, 'unit', 'ชิ้น', c.unit) + '</div></div>';
+    }).join('');
+    if (!list.length) html = '<div class="empty">ไม่พบสินค้าที่ค้นหา<br>ลองพิมพ์คำอื่น หรือขนาด เช่น 345</div>';
+    $('list').innerHTML = html;
+    $('pg-info').textContent = 'หน้า ' + (S.page + 1) + '/' + pages;
+    $('pg-prev').disabled = S.page === 0;
+    $('pg-next').disabled = S.page >= pages - 1;
+    $('pager').classList.toggle('hidden', pages <= 1);
+    $('q-clear').classList.toggle('hidden', !S.q && !S.focusCode);
+    updateStat(list.length);
+  }
+  function stepper(code, field, label, val) {
+    return '<div class="qbox"><div class="ql">' + label + '</div><div class="step">' +
+      '<button type="button" data-act="minus" data-field="' + field + '">−</button>' +
+      '<input type="text" inputmode="numeric" pattern="[0-9]*" data-field="' + field + '" value="' + esc(val) + '" placeholder="-">' +
+      '<button type="button" data-act="plus" data-field="' + field + '">+</button></div></div>';
+  }
+  function updateStat(n) {
+    var total = S.pl.items.length, done = 0;
+    S.pl.items.forEach(function (it) { if (isCounted(it.code)) done++; });
+    $('stat-left').innerHTML = (S.q || S.focusCode) ? 'ผลค้นหา <b>' + n + '</b> รายการ' : 'รายการใน PL <b>' + total + '</b>';
+    $('stat-right').innerHTML = 'นับแล้ว <b>' + done + '/' + total + '</b>';
+  }
+  function setCount(code, field, val) {
+    val = digits(val).replace(/^0+(?=\d)/, '');
+    S.counts[code] = S.counts[code] || { pack: '', unit: '' };
+    S.counts[code][field] = val;
+    if (!S.pl.inPL[code] && S.extra.indexOf(code) < 0 && val !== '') S.extra.push(code);
+    saveDraft();
+    return val;
+  }
+  function onListInput(e) {
+    var inp = e.target;
+    if (inp.tagName !== 'INPUT') return;
+    var card = inp.closest('.item');
+    var code = card.getAttribute('data-code');
+    var v = setCount(code, inp.getAttribute('data-field'), inp.value);
+    if (inp.value !== v) inp.value = v;
+    card.classList.toggle('done', isCounted(code));
+    updateStat(currentList().length);
+  }
+  function onListClick(e) {
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var card = b.closest('.item'), code = card.getAttribute('data-code'), field = b.getAttribute('data-field');
+    var inp = card.querySelector('input[data-field="' + field + '"]');
+    var n = parseInt(inp.value || '0', 10);
+    n = b.getAttribute('data-act') === 'plus' ? n + 1 : Math.max(0, n - 1);
+    inp.value = setCount(code, field, String(n));
+    card.classList.toggle('done', isCounted(code));
+    updateStat(currentList().length);
+  }
+
+  // ---------- PL ----------
+  function findPL(q, exact) {
+    errBox('pl-err', ''); $('pl-multi').innerHTML = '';
+    var d = digits(q);
+    if (!exact && d.length < 5) { errBox('pl-err', 'กรุณาพิมพ์เลข PL อย่างน้อย 5 หลัก'); return; }
+    loading(true, 'กำลังค้นหา PL...');
+    api('findPL', { q: q, exact: !!exact }).then(function (j) {
+      if (j.multiple) {
+        $('pl-multi').innerHTML = '<p class="sec" style="margin-top:16px">พบหลายใบ กรุณาเลือก:</p>' +
+          j.multiple.map(function (m) { return '<button class="choice" data-pl="' + esc(m.pl) + '">' + esc(m.pl) + ' <span class="muted">(' + m.items + ' รายการ)</span></button>'; }).join('');
+        return;
+      }
+      openPL(j);
+    }).catch(function (e) { errBox('pl-err', e.message); })
+      .finally(function () { loading(false); });
+  }
+  function openPL(j) {
+    S.pl = { pl: j.pl, items: j.items, inPL: {} };
+    j.items.forEach(function (it) { S.pl.inPL[it.code] = true; });
+    S.counts = {}; S.extra = [];
+    Object.keys(j.saved || {}).forEach(function (code) {
+      var s = j.saved[code];
+      var bothZero = !s.pack && !s.unit;
+      S.counts[code] = { pack: (s.pack || bothZero) ? String(s.pack) : '', unit: s.unit ? String(s.unit) : '' };
+      if (!S.pl.inPL[code]) S.extra.push(code);
+    });
+    var draft = store('draft_' + j.pl);
+    if (draft && draft.counts) { S.counts = draft.counts; S.extra = draft.extra || []; }
+    S.page = 0; S.q = ''; S.focusCode = null; $('q').value = '';
+    setText('pl-no', j.pl);
+    show('s-count');
+    renderList();
+    if (j.lastBy) toast('PL นี้เคยบันทึกโดย ' + j.lastBy + ' (' + j.lastAt + ') — แก้ไขได้', '');
+  }
+
+  // ---------- review & submit ----------
+  function renderReview() {
+    var counted = [], missing = [], extra = [];
+    S.pl.items.forEach(function (it) {
+      var p = S.byCode[it.code] || { c: it.code, n: it.name };
+      if (isCounted(it.code)) counted.push(p); else missing.push(p);
+    });
+    S.extra.forEach(function (c) { if (isCounted(c) && !S.pl.inPL[c]) extra.push(S.byCode[c] || { c: c, n: c }); });
+    function qtyText(code) {
+      var c = S.counts[code], t = [];
+      if (c.pack !== '') t.push(c.pack + ' แพค');
+      if (c.unit !== '') t.push(c.unit + ' ชิ้น');
+      return t.join(' + ');
+    }
+    function rows(list, withQty) {
+      return list.map(function (p) { return '<div class="rv"><span class="n">' + esc(p.n) + (p.s ? ' <span class="tag size">' + esc(p.s) + '</span>' : '') + '</span>' + (withQty ? '<span class="q">' + esc(qtyText(p.c)) + '</span>' : '') + '</div>'; }).join('');
+    }
+    var h = '';
+    if (missing.length) h += '<div class="card" style="border:3px solid var(--red)"><div class="sec red">⚠️ ยังไม่ได้นับ ' + missing.length + ' รายการ</div>' + rows(missing, false) + '</div>';
+    h += '<div class="card"><div class="sec green">✔ นับแล้ว ' + counted.length + ' รายการ</div>' + (rows(counted, true) || '<div class="muted">-</div>') + '</div>';
+    if (extra.length) h += '<div class="card"><div class="sec orange">➕ สินค้านอก PL ' + extra.length + ' รายการ</div>' + rows(extra, true) + '</div>';
+    $('review-body').innerHTML = h;
+  }
+  function submit() {
+    var items = [];
+    Object.keys(S.counts).forEach(function (code) {
+      if (!isCounted(code)) return;
+      var c = S.counts[code];
+      items.push({ code: code, pack: c.pack === '' ? 0 : +c.pack, unit: c.unit === '' ? 0 : +c.unit });
+    });
+    if (!items.length) { toast('ยังไม่ได้ใส่จำนวนสินค้าเลย', 'bad'); return; }
+    loading(true, 'กำลังส่งข้อมูล...');
+    api('submit', { pl: S.pl.pl, items: items }).then(function (j) {
+      store('draft_' + S.pl.pl, null);
+      $('done-msg').textContent = 'บันทึก ' + j.saved + ' รายการ • ' + j.time;
+      show('s-done');
+    }).catch(function (e) { toast('ส่งไม่สำเร็จ: ' + e.message, 'bad'); })
+      .finally(function () { loading(false); });
+  }
+
+  // ---------- scanner ----------
+  var scanner = null, scanning = false;
+  function openScanner() {
+    if (!window.Html5Qrcode) { toast('โหลดตัวสแกนไม่ได้ ตรวจสอบอินเทอร์เน็ต', 'bad'); return; }
+    $('scanner').classList.remove('hidden');
+    var F = Html5QrcodeSupportedFormats;
+    scanner = new Html5Qrcode('reader', {
+      formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.ITF],
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false
+    });
+    scanning = true;
+    scanner.start({ facingMode: 'environment' },
+      { fps: 12, qrbox: function (w, h) { return { width: Math.floor(w * 0.85), height: Math.floor(Math.min(h, w) * 0.45) }; } },
+      onScan, function () {}
+    ).catch(function (e) {
+      closeScanner();
+      toast('เปิดกล้องไม่ได้ กรุณาอนุญาตการใช้กล้อง', 'bad');
+    });
+  }
+  function closeScanner() {
+    $('scanner').classList.add('hidden');
+    if (scanner && scanning) { scanning = false; scanner.stop().then(function () { scanner.clear(); }).catch(function () {}); }
+  }
+  function onScan(text) {
+    if (!scanning) return;
+    closeScanner();
+    if (navigator.vibrate) navigator.vibrate(120);
+    handleBarcode(String(text).trim());
+  }
+  function handleBarcode(code) {
+    var hit = S.byBarcode[code] || S.byBarcode[code.replace(/^0+/, '')] || (S.byCode[code] ? { code: code, field: 'pack' } : null);
+    if (!hit) { toast('ไม่พบบาร์โค้ด ' + code + ' ในระบบ', 'bad'); return; }
+    S.focusCode = hit.code; S.q = ''; $('q').value = ''; S.page = 0;
+    renderList();
+    var p = S.byCode[hit.code];
+    toast('พบ: ' + (p ? p.n : hit.code) + (S.pl.inPL[hit.code] ? '' : ' (นอก PL)'), S.pl.inPL[hit.code] ? 'ok' : 'bad');
+    var card = document.querySelector('.item');
+    if (card) {
+      card.classList.add('flash');
+      var inp = card.querySelector('input[data-field="' + hit.field + '"]');
+      inp.classList.add('hl');
+      setTimeout(function () { inp.focus(); }, 150);
+    }
+  }
+
+  // ---------- login ----------
+  function doLogin() {
+    errBox('login-err', '');
+    var email = $('email').value.trim().toLowerCase(), pin = digits($('pin').value);
+    if (!email || pin.length !== 4) { errBox('login-err', 'กรุณากรอกอีเมลและ PIN 4 หลัก'); return; }
+    loading(true, 'กำลังเข้าสู่ระบบ...');
+    api('login', { email: email, pin: pin }).then(function (j) {
+      S.user = { email: email, pin: pin, name: j.name };
+      store('user', S.user);
+      setText('u-name', j.name);
+      $('plq').value = '';
+      show('s-pl');
+      refreshProducts(true);
+    }).catch(function (e) { errBox('login-err', e.message); })
+      .finally(function () { loading(false); });
+  }
+
+  // ---------- events ----------
+  $('btn-login').onclick = doLogin;
+  $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  $('btn-refresh').onclick = function () { refreshProducts(false); };
+  $('btn-logout').onclick = function () { S.user = null; store('user', null); $('pin').value = ''; show('s-login'); };
+  $('btn-findpl').onclick = function () { findPL($('plq').value, false); };
+  $('plq').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^0-9PL]/g, ''); });
+  $('plq').addEventListener('keydown', function (e) { if (e.key === 'Enter') findPL(this.value, false); });
+  $('pl-multi').onclick = function (e) { var b = e.target.closest('[data-pl]'); if (b) findPL(b.getAttribute('data-pl'), true); };
+
+  var qT;
+  $('q').addEventListener('input', function () {
+    var v = this.value; clearTimeout(qT);
+    qT = setTimeout(function () { S.q = v; S.focusCode = null; S.page = 0; renderList(); }, 180);
+  });
+  $('q-clear').onclick = function () { $('q').value = ''; S.q = ''; S.focusCode = null; S.page = 0; renderList(); };
+  $('list').addEventListener('input', onListInput);
+  $('list').addEventListener('click', onListClick);
+  $('list').addEventListener('focusin', function (e) { if (e.target.tagName === 'INPUT') e.target.select(); });
+  $('pg-prev').onclick = function () { S.page--; renderList(); window.scrollTo(0, 0); };
+  $('pg-next').onclick = function () { S.page++; renderList(); window.scrollTo(0, 0); };
+  $('btn-scan').onclick = openScanner;
+  $('btn-scan-close').onclick = closeScanner;
+  $('btn-changepl').onclick = function () { saveDraft(); $('pl-multi').innerHTML = ''; show('s-pl'); };
+  $('btn-review').onclick = function () { renderReview(); show('s-review'); };
+  $('btn-back-edit').onclick = function () { show('s-count'); renderList(); };
+  $('btn-submit').onclick = submit;
+  $('btn-edit-again').onclick = function () { findPL(S.pl.pl, true); };
+  $('btn-new-pl').onclick = function () { S.pl = null; $('plq').value = ''; $('pl-multi').innerHTML = ''; show('s-pl'); };
+
+  // ---------- start ----------
+  updateDates();
+  setInterval(updateDates, 60000);
+  var cached = store('products');
+  if (cached && cached.list) setProducts(cached.list, cached.updated);
+  var u = store('user');
+  if (u) { $('email').value = u.email || ''; $('pin').value = u.pin || ''; }
+  refreshProducts(true);
+
+  // สำหรับทดสอบ
+  window.__plc = { S: S, handleBarcode: handleBarcode, renderList: renderList };
+})();
+</script>
+</body>
+</html>
